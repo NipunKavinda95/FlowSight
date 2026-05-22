@@ -1,0 +1,36 @@
+@import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;600;700&family=IBM+Plex+Sans:wght@400;500;600;700&display=swap');
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  background: #060b12;
+  color: #e2e8f0;
+  font-family: 'IBM Plex Sans', 'Segoe UI', sans-serif;
+}
+
+select, input {
+  outline: none;
+}
+
+select option {
+  background: #0f1520;
+}
+
+/* Scrollbar */
+::-webkit-scrollbar        { width: 4px; }
+::-webkit-scrollbar-track  { background: #060b12; }
+::-webkit-scrollbar-thumb  { background: #1a2235; border-radius: 4px; }
+
+/* Animations */
+@keyframes cPulse {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50%      { opacity: .55; transform: scale(1.4); }
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(-3px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
