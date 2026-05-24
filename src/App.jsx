@@ -18,6 +18,7 @@ export default function FlowSight() {
 
   const {
     conveyors, simRunning, totalPcs, now, faultLog,
+    apiError, isStale, staleIds, secondsSince,        
     setSimRunning, toggleFault, toggleStop, clearFaultLog,
   } = useSimulation(settings);
 
@@ -49,19 +50,89 @@ export default function FlowSight() {
   const timeStr = now.toLocaleTimeString("en-GB",  { hour: "2-digit", minute: "2-digit", second: "2-digit" });
   const dateStr = now.toLocaleDateString("en-GB",  { weekday: "short", day: "2-digit", month: "short", year: "numeric" });
 
+  const handleReconnect = async () => {
+    try {
+      // Call bridge reconnect endpoint — bridge reconnects to MQTT broker
+      const res = await fetch("http://localhost:8000/api/reconnect", { method: "POST" });
+      const result = await res.json();
+      console.log("[FlowSight] Reconnect:", result.message);
+    } catch (err) {
+      console.warn("[FlowSight] Reconnect failed — is bridge.py running?", err.message);
+    }
+  };
+  
   return (
     <div style={{ background: "#060b12", minHeight: "100vh", color: "#e2e8f0", paddingBottom: 40 }}>
 
       <TopBar
-        settings={settings}
-        onLineChange={line => setSettings(s => ({ ...s, line }))}
-        faultCount={faultCount}
-        simRunning={simRunning}
-        onToggleSim={() => setSimRunning(r => !r)}
-        onOpenSettings={() => setShowModal(true)}
-        timeStr={timeStr}
-        dateStr={dateStr}
-      />
+      settings={settings}
+      onLineChange={line => setSettings(s => ({ ...s, line }))}
+      faultCount={faultCount}
+      simRunning={simRunning}
+      onToggleSim={() => setSimRunning(r => !r)}
+      onOpenSettings={() => setShowModal(true)}
+      timeStr={timeStr}
+      dateStr={dateStr}
+    />
+
+    {/* ── Connection health banner ── */}
+    {(apiError || isStale) && (
+      <div style={{
+        background: apiError && !isStale ? "#ff4d4d18" : "#f0b42918",
+        borderBottom: `1px solid ${apiError && !isStale ? "#ff4d4d44" : "#f0b42944"}`,
+        padding: "7px 20px",
+        display: "flex", alignItems: "center", justifyContent: "space-between",
+      }}>
+
+        {/* Left — icon + message + affected conveyors */}
+        <div style={{
+          fontSize: 11,
+          color: apiError && !isStale ? "#ff8080" : "#f0b429",
+          fontFamily: "IBM Plex Mono,monospace",
+          display: "flex", alignItems: "center", gap: 8,
+        }}>
+          <span style={{ fontSize: 14 }}>
+            {apiError && !isStale ? "⛔" : "⚠"}
+          </span>
+
+          {/* Error or stale message */}
+          {apiError
+            ? apiError
+            : `Data stale — no update for ${secondsSince}s`
+          }
+
+          {/* Which conveyors are affected */}
+          {staleIds.length > 0 && (
+            <span style={{ color: "#4a5568", marginLeft: 4 }}>
+              · Affected: {staleIds.join(", ")}
+            </span>
+          )}
+        </div>
+
+        {/* Right — instruction + reconnect button */}
+        <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+          <span style={{ fontSize: 10, color: "#4a5568", fontFamily: "IBM Plex Mono,monospace" }}>
+            {isStale && !apiError
+              ? `Last data ${secondsSince}s ago — restart plc_simulator.py`
+              : "Start bridge.py and plc_simulator.py"
+            }
+          </span>
+
+          {/* Reconnect button — calls bridge /api/reconnect */}
+          <button
+            onClick={handleReconnect}
+            style={{
+              fontSize: 10, fontWeight: 700, letterSpacing: "0.06em",
+              padding: "4px 12px", borderRadius: 6, cursor: "pointer",
+              background: "#38bdf822", border: "1px solid #38bdf866",
+              color: "#38bdf8",
+            }}
+          >
+            ↺ RECONNECT
+          </button>
+        </div>
+      </div>
+    )}
 
       <div style={{ padding: "18px 20px 0", maxWidth: 1200, margin: "0 auto" }}>
 
