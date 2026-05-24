@@ -1,7 +1,3 @@
-// ── hooks/useSimulation.js ────────────────────────────────────────────────────
-// Custom hook — owns ALL simulation state and tick logic.
-// App.jsx just calls this hook and gets back data + actions.
-
 import { useState, useEffect, useRef } from "react";
 import { LINES, STATUS, TICK_MS } from "../constants/config";
 import { initConveyor, tickConveyor } from "../utils/simulation";
